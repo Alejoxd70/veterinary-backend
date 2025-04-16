@@ -1,8 +1,9 @@
+import bcrypt from 'bcrypt'
 import { ZodError } from 'zod'
+import jsw from 'jsonwebtoken'
+import { SALT_ROUNDS } from '../config/constants.js'
 import { prisma } from '../lib/db.js'
 import { userSchema, userLoginSchema } from '../schemas/userSchema.js'
-import bcrypt from 'bcrypt'
-import { SALT_ROUNDS } from '../config/constants.js'
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -89,8 +90,11 @@ export const loginUser = async (req, res) => {
     // remove password form user object
     const { password: _, ...userWithoutPassword } = user
 
+    // create token
+    const token = generateToken({ dataUser: userWithoutPassword })
+
     // TODO: create a JWT token and send it to the client
-    return res.status(200).json({ msg: 'login successful', user: userWithoutPassword })
+    return res.status(200).json({ msg: 'login successful', user: userWithoutPassword, token })
   } catch (error) {
     console.error('Error validating user data')
     console.log(error)
@@ -102,4 +106,10 @@ export const loginUser = async (req, res) => {
     }
     return res.status(500).json({ errors: 'Internal server error', error })
   }
+}
+const generateToken = ({ dataUser }) => {
+  return jsw.sign({
+    user: dataUser.name,
+    email: dataUser.email
+  }, process.env.JWT_SECRET)
 }
