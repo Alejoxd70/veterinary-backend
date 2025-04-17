@@ -1,17 +1,21 @@
 import bcrypt from 'bcrypt'
 import { ZodError } from 'zod'
-import jsw from 'jsonwebtoken'
 import { SALT_ROUNDS } from '../config/constants.js'
 import { prisma } from '../lib/db.js'
 import { userSchema, userLoginSchema } from '../schemas/userSchema.js'
+import { generateToken } from '../helpers/generateToken.js'
 
 export const getAllUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       select: {
-        id: true,
         name: true,
-        email: true
+        email: true,
+        role: {
+          select: {
+            name: true
+          }
+        }
       }
     })
     return res.status(200).json(users)
@@ -32,7 +36,7 @@ export const registerUser = async (req, res) => {
     const existingUser = await prisma.user.findUnique({
       where: { email }
     })
-    console.log(existingUser)
+
     if (existingUser) return res.status(409).json({ error: 'User already exists' })
 
     // hash the password
@@ -43,11 +47,17 @@ export const registerUser = async (req, res) => {
       data: {
         name,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        roleId: 2 // default role for new users
       },
       select: {
         name: true,
-        email: true
+        email: true,
+        role: {
+          select: {
+            name: true
+          }
+        }
       }
     })
 
@@ -75,10 +85,14 @@ export const loginUser = async (req, res) => {
         email
       },
       select: {
-        id: false,
         name: true,
         email: true,
-        password: true
+        password: true,
+        role: {
+          select: {
+            name: true
+          }
+        }
       }
     })
     if (!user) return res.status(401).json({ error: 'User does not exist ' })
@@ -106,10 +120,4 @@ export const loginUser = async (req, res) => {
     }
     return res.status(500).json({ errors: 'Internal server error', error })
   }
-}
-const generateToken = ({ dataUser }) => {
-  return jsw.sign({
-    user: dataUser.name,
-    email: dataUser.email
-  }, process.env.JWT_SECRET)
 }
