@@ -48,7 +48,7 @@ export const registerUser = async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        roleId: 2 // default role for new users
+        roleId: 1 // 2 default role for new users - 1 for admin
       },
       select: {
         name: true,
