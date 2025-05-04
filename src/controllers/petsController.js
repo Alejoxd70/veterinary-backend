@@ -2,9 +2,132 @@ import { prisma } from '../lib/db.js'
 
 export const getAllPets = async (req, res) => {
   try {
-    const data = await prisma.pet.findMany()
-    res.status(200).json({ data })
+    const pets = await prisma.pet.findMany({
+      select: {
+        name: true,
+        type: true,
+        breed: true
+      }
+    })
+    return res.status(200).json(pets)
   } catch (error) {
-    res.status(500).json({ error: 'server error' })
+    console.error('Error fetching pets')
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const getPet = async (req, res) => {
+  try {
+    const { id } = req.params
+    // Get pet from id
+    const pet = await prisma.pet.findUnique({
+      where: { id: Number(id) },
+      select: {
+        name: true,
+        type: true,
+        breed: true
+      }
+    })
+    if (!pet) {
+      return res.status(404).json({ error: 'Pet not found' })
+    }
+    return res.status(200).json(pet)
+  } catch (error) {
+    console.error('Error fetching pet')
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const registerPet = async (req, res) => {
+  try {
+    const { name, age, type, breed, description, imageUrl } = req.body
+
+    // create a new pet
+    const newPet = await prisma.pet.create({
+      data: {
+        name,
+        age,
+        type,
+        breed,
+        description,
+        imageUrl
+      },
+      select: {
+        name: true,
+        age: true,
+        type: true,
+        breed: true,
+        description: true
+      }
+    })
+
+    return res.status(201).json(newPet)
+  } catch (error) {
+    console.error('Error fetching pets')
+    res.status(500).json({ error: 'Internal server error' })
+    console.log(error)
+  }
+}
+
+export const updatePet = async (req, res) => {
+  try {
+    const { id } = req.params
+    const existingPet = await prisma.pet.findUnique({
+      where: { id: Number(id) }
+    })
+    if (!existingPet) {
+      return res.status(404).json({ error: 'Pet not found' })
+    }
+
+    const { name, age, type, breed, description, imageUrl } = req.body
+    // update pet from id
+    const changePet = await prisma.pet.update({
+      where: { id: Number(id) },
+      data: {
+        name,
+        age,
+        type,
+        breed,
+        description,
+        imageUrl
+      },
+      select: {
+        name: true,
+        age: true,
+        type: true,
+        breed: true,
+        description: true
+      }
+    })
+    return res.status(200).json(changePet)
+  } catch (error) {
+    console.error('Error updating pet', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const deletePet = async (req, res) => {
+  try {
+    const { id } = req.params
+    const existingPet = await prisma.pet.findUnique({
+      where: { id: Number(id) }
+    })
+    if (!existingPet) {
+      return res.status(404).json({ error: 'Pet not found' })
+    }
+    const removePet = await prisma.pet.delete({
+      where: { id: Number(id) },
+      select: {
+        name: true,
+        age: true,
+        type: true,
+        breed: true,
+        description: true
+      }
+    })
+    return res.status(200).json(removePet)
+  } catch (error) {
+    console.error('Error fetching pet', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
 }
