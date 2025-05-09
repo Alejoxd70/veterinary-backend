@@ -4,14 +4,21 @@ export const getAllPets = async (req, res) => {
   try {
     const pets = await prisma.pet.findMany({
       select: {
+        id: true,
         name: true,
         type: true,
-        breed: true
+        breed: true,
+        description: true,
+        age: true,
+        imageUrl: true,
+        latitude: true,
+        longitude: true,
+        status: true
       }
     })
     return res.status(200).json(pets)
   } catch (error) {
-    console.error('Error fetching pets')
+    console.error('Error fetching pets', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 }
@@ -25,7 +32,20 @@ export const getPet = async (req, res) => {
       select: {
         name: true,
         type: true,
-        breed: true
+        breed: true,
+        description: true,
+        age: true,
+        imageUrl: true,
+        latitude: true,
+        longitude: true,
+        adopted: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
       }
     })
     if (!pet) {
