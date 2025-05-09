@@ -64,6 +64,8 @@ model Pet {
   breed       String
   description String?
   imageUrl    String?
+  latitude    Float?
+  longitude   Float?
   status      PetStatus  @default(AVAILABLE)
   adoptions   Adoption[]
   dates       PetDate[]
