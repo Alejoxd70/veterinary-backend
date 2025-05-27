@@ -3,6 +3,9 @@ import { prisma } from '../lib/db.js'
 export const getAllPets = async (req, res) => {
   try {
     const pets = await prisma.pet.findMany({
+      where: {
+        status: 'AVAILABLE'
+      },
       select: {
         id: true,
         name: true,
@@ -99,17 +102,17 @@ export const updatePet = async (req, res) => {
       return res.status(404).json({ error: 'Pet not found' })
     }
 
-    const { name, age, type, breed, description, imageUrl } = req.body
     // update pet from id
     const changePet = await prisma.pet.update({
       where: { id: Number(id) },
       data: {
-        name,
-        age,
-        type,
-        breed,
-        description,
-        imageUrl
+        name: req.body.name || existingPet.name,
+        age: req.body.age || existingPet.age,
+        type: req.body.type || existingPet.type,
+        breed: req.body.breed || existingPet.breed,
+        description: req.body.description || existingPet.description,
+        imageUrl: req.body.imageUrl || existingPet.imageUrl,
+        status: req.body.status || existingPet.status
       },
       select: {
         name: true,

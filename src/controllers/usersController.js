@@ -16,7 +16,8 @@ export const getAllUsers = async (req, res) => {
           select: {
             name: true
           }
-        }
+        },
+        createdAt: true
       }
     })
     return res.status(200).json(users)
@@ -38,7 +39,7 @@ export const registerUser = async (req, res) => {
       where: { email }
     })
 
-    if (existingUser) return res.status(409).json({ error: 'User already exists' })
+    if (existingUser) return res.status(409).json({ type: 'validation', error: 'User already exists' })
 
     // hash the password
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
@@ -49,7 +50,7 @@ export const registerUser = async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        roleId: 1 // 2 default role for new users - 1 for admin
+        roleId: 2 // 2 default role for new users - 1 for admin
       },
       select: {
         name: true,
@@ -69,7 +70,7 @@ export const registerUser = async (req, res) => {
     // handle zod validation errors
     if (error instanceof ZodError) {
       const errorMessages = error.issues.map(err => err.message)
-      return res.status(400).json({ error: errorMessages })
+      return res.status(400).json({ type: 'validation', error: errorMessages })
     }
     return res.status(500).json({ errors: 'Internal server error', error })
   }
@@ -106,7 +107,7 @@ export const deleteUser = async (req, res) => {
     // handle zod validation errors
     if (error instanceof ZodError) {
       const errorMessages = error.issues.map(err => err.message)
-      return res.status(400).json({ error: errorMessages })
+      return res.status(400).json({ type: 'validation', error: errorMessages })
     }
     return res.status(500).json({ errors: 'Error deleting the user', error: error.message })
   }
@@ -181,6 +182,7 @@ export const loginUser = async (req, res) => {
         email
       },
       select: {
+        id: true,
         name: true,
         email: true,
         password: true,
@@ -199,6 +201,9 @@ export const loginUser = async (req, res) => {
 
     // remove password form user object
     const { password: _, ...userWithoutPassword } = user
+
+    // ajust user role name
+    userWithoutPassword.role = userWithoutPassword.role.name
 
     // create token
     const token = generateToken({ dataUser: userWithoutPassword })

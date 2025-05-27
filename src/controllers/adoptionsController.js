@@ -4,6 +4,7 @@ export const getAllAdoptions = async (req, res) => {
   try {
     const adoptions = await prisma.adoption.findMany({
       select: {
+        id: true,
         user: {
           select: {
             name: true
@@ -27,10 +28,15 @@ export const getAllAdoptions = async (req, res) => {
 export const getAdoption = async (req, res) => {
   try {
     const { id } = req.params
+
+    // check if id is a number
+    if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' })
+
     // Get pet from id
-    const adoption = await prisma.adoption.findUnique({
-      where: { id: Number(id) },
+    const adoption = await prisma.adoption.findMany({
+      where: { userId: Number(id) },
       select: {
+        id: true,
         user: {
           select: {
             name: true
@@ -38,7 +44,12 @@ export const getAdoption = async (req, res) => {
         },
         pet: {
           select: {
-            name: true
+            id: true,
+            type: true,
+            name: true,
+            description: true,
+            imageUrl: true,
+            telephone: true
           }
         },
         adoptedAt: true
@@ -96,13 +107,13 @@ export const updateAdoption = async (req, res) => {
       return res.status(404).json({ error: 'Adoption not found' })
     }
 
-    const { userId, petId } = req.body
     // update pet from id
     const changeAdoption = await prisma.adoption.update({
       where: { id: Number(id) },
       data: {
-        userId,
-        petId
+        userId: req.body.userId || existingAdoption.userId,
+        petId: req.body.petId || existingAdoption.petId,
+        status: req.body.status || existingAdoption.status
       },
       select: {
         user: {

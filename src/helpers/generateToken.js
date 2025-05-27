@@ -2,9 +2,10 @@ import jsw from 'jsonwebtoken'
 
 export const generateToken = ({ dataUser }) => {
   return jsw.sign({
-    user: dataUser.name,
+    id: dataUser.id,
+    name: dataUser.name,
     email: dataUser.email,
-    role: dataUser.role.name
+    role: dataUser.role
   }, process.env.JWT_SECRET, {
     expiresIn: '1h',
     noTimestamp: true

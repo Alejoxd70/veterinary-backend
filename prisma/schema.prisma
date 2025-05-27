@@ -26,6 +26,7 @@ model User {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @default(now()) @updatedAt
   orders    Order[]
+  Pet       Pet[]
 }
 
 model Role {
@@ -66,6 +67,9 @@ model Pet {
   imageUrl    String?
   latitude    Float?
   longitude   Float?
+  telephone   String?
+  idUser      Int?
+  user        User?      @relation(fields: [idUser], references: [id])
   status      PetStatus  @default(AVAILABLE)
   adoptions   Adoption[]
   dates       PetDate[]
